@@ -1,0 +1,14 @@
+# Tipi di file usati dall'app che alcuni server non conoscono
+AddType application/manifest+json .webmanifest
+AddType image/webp .webp
+
+# Apache: rimanda tutte le rotte Angular a index.html.
+# RewriteBase deve coincidere con baseHref di produzione in angular.json.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /code/tastevin/
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+  RewriteRule ^ index.html [L]
+</IfModule>

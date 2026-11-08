@@ -1,0 +1,9 @@
+{
+  "/api": {
+    "target": "https://www.webporter.it",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": { "^/api": "/code/bend/tastevin" },
+    "logLevel": "debug"
+  }
+}

@@ -1,59 +1,53 @@
 # Tastevin
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.27.
+Applicazione web (Angular 19 + PrimeNG 19) per la degustazione guidata del vino secondo il metodo AIS,
+ottimizzata per il cellulare. Specifiche in `doc/tastevin.docx`.
 
-## Development server
+## Struttura
 
-To start a local development server, run:
+| Percorso | Contenuto |
+|---|---|
+| `src/app/models/ais.ts` | Voci e scale AIS, colori, fattori dei punteggi |
+| `src/app/models/tasting.ts` | Modello dati di vino e degustazione, calcolo del totale |
+| `src/app/pages/tasting` | Procedura guidata: Vino → Visivo → Olfattivo → Gustativo → Finale → Riepilogo |
+| `src/app/pages/archive`, `detail` | Archivio delle degustazioni e dettaglio (modifica / elimina / nuova degustazione dello stesso vino) |
+| `src/app/shared` | Selettore a chip, punteggio 0–4, calice colorato, riepilogo |
+| `api/` | Web API PHP (PDO) e schema MySQL |
 
-```bash
-ng serve
+La degustazione in corso viene salvata anche nel browser: ricaricando la pagina non si perde.
+Il salvataggio nel database avviene solo se sono stati inseriti i dati del vino (almeno il nome).
+
+## Database e API
+
+1. Creare il database MySQL ed eseguire `api/schema.sql`.
+2. Copiare `api/config.sample.php` in `api/config.php` e inserire le credenziali.
+   - `cors_origins`: origini ammesse (per lo sviluppo `http://localhost:4200`).
+   - `api_key`: facoltativa; se impostata, va messa uguale in `src/environments/environment*.ts`.
+3. Caricare la cartella `api/` sul server (PHP 7.4 o superiore, estensione `pdo_mysql`).
+
+Endpoint:
+
+- `GET  api/wines.php?q=…` ricerca vini
+- `GET  api/tastings.php?q=…` elenco degustazioni
+- `GET  api/tastings.php?id=N` degustazione completa
+- `POST api/tastings.php` crea/aggiorna `{ wine, tasting }`
+- `DELETE api/tastings.php?id=N` elimina la degustazione
+
+## Sviluppo
+
+```
+npm install
+npm run serve        # http://localhost:4200
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+In sviluppo le API sono lette da `apiUrl` in `src/environments/environment.development.ts`.
 
-## Code scaffolding
+## Pubblicazione
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```
+npm run production
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Genera `dist/tastevin/browser/` con l'app, il file `.htaccess` (rotte Angular su Apache) e la cartella `api/`.
+In produzione l'app chiama `api/` nella stessa cartella (`src/environments/environment.ts`).
+Se l'app non è pubblicata nella radice del sito, compilare con `ng build --base-href /percorso/`.

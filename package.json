@@ -1,15 +1,19 @@
 {
-  "name": "tastevin",
-  "version": "0.0.0",
+  "name": "Tastevin",
+  "version": "1.0.7.2611081",
+  "author": "Massimo Zanoletti",
+  "compile-date": "2026-11-08",
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "clean": ".bin\\clean.bat",
+    "clean-all": ".bin\\clean-all.bat",
+    "build": ".bin\\build.bat",
+    "start": ".bin\\start.bat",
+    "production": ".bin\\production.bat",
+    "serve": "ng serve"
   },
   "private": true,
   "dependencies": {
+    "@angular/animations": "^19.2.25",
     "@angular/common": "^19.2.0",
     "@angular/compiler": "^19.2.0",
     "@angular/core": "^19.2.0",
@@ -17,6 +21,9 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
+    "@primeng/themes": "^19.1.4",
+    "primeicons": "^7.0.0",
+    "primeng": "^19.1.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

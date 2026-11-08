@@ -1,0 +1,365 @@
+@if (loading()) {
+  <div class="center"><p-progress-spinner strokeWidth="4" /></div>
+} @else {
+  <!-- Indicatore delle fasi -->
+  <nav class="stepper" aria-label="Fasi della degustazione">
+    @for (s of steps; track s.label; let i = $index) {
+      <button type="button" class="step" [class.active]="step() === i" [class.done]="step() > i"
+              (click)="goTo(i)" [attr.aria-current]="step() === i ? 'step' : null">
+        <span class="dot"><i [class]="s.icon"></i></span>
+        <span class="lbl">{{ s.label }}</span>
+      </button>
+    }
+  </nav>
+
+  @if (t.punteggioAttivo && step() > 0 && !isLast) {
+    <div class="live-total"><i class="pi pi-star-fill"></i> {{ total ?? 0 }} / {{ A.MAX_SCORE }}</div>
+  }
+
+  <!-- Il contenitore intercetta le modifiche dei controlli per aggiornare totale e bozza -->
+  <div class="panel" (click)="changed()" (input)="changed()" (change)="changed()">
+    @switch (step()) {
+
+      <!-- ======================= 0 · VINO ======================= -->
+      @case (0) {
+        <h1>Nuova degustazione</h1>
+
+        <div class="card">
+          <label class="field">
+            <span>Data</span>
+            <input pInputText type="date" [(ngModel)]="t.data" />
+          </label>
+
+          <div class="switch-row">
+            <div>
+              <b>Attribuisci i punteggi AIS</b>
+              <small>Ogni voce da 0 a 4 con il suo fattore, totale su 100.</small>
+            </div>
+            <p-toggleswitch [(ngModel)]="t.punteggioAttivo" (onChange)="changed()" />
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="switch-row">
+            <div>
+              <b>Dati del vino</b>
+              <small>Facoltativi. Necessari per salvare la degustazione in archivio.</small>
+            </div>
+            <p-toggleswitch [ngModel]="showWine()" (ngModelChange)="showWine.set($event)" />
+          </div>
+
+          @if (showWine()) {
+            <div class="field">
+              <span>Cerca un vino già in archivio</span>
+              <p-autocomplete [suggestions]="wineSuggestions()" (completeMethod)="searchWine($event)"
+                              (onSelect)="selectWine($event)" optionLabel="nome" [minLength]="2"
+                              placeholder="Nome o produttore…" [fluid]="true" [forceSelection]="false"
+                              [ngModel]="null" emptyMessage="Nessun vino trovato">
+                <ng-template let-wine #item>
+                  <div class="wine-opt">
+                    <b>{{ wine.nome }}</b> @if (wine.annata) { {{ wine.annata }} }
+                    <small>{{ wine.produttore }}</small>
+                  </div>
+                </ng-template>
+              </p-autocomplete>
+            </div>
+
+            @if (w.id) {
+              <p-message severity="info" styleClass="mb">
+                <div class="linked">
+                  <span>Vino in archivio: <b>{{ w.nome }}</b>. Le modifiche aggiorneranno la scheda.</span>
+                  <p-button label="Scollega" [text]="true" size="small" (onClick)="clearWine()" />
+                </div>
+              </p-message>
+            }
+
+            <label class="field">
+              <span>Nome *</span>
+              <input pInputText [(ngModel)]="w.nome" placeholder="es. Barolo Cannubi" />
+            </label>
+            <label class="field">
+              <span>Produttore</span>
+              <input pInputText [(ngModel)]="w.produttore" />
+            </label>
+            <div class="row2">
+              <label class="field">
+                <span>Annata</span>
+                <p-inputnumber [(ngModel)]="w.annata" [useGrouping]="false" [min]="1800" [max]="2100"
+                               inputmode="numeric" [fluid]="true" />
+              </label>
+              <label class="field">
+                <span>Grado alcolico</span>
+                <p-inputnumber [(ngModel)]="w.grado" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="1"
+                               [min]="0" [max]="25" suffix=" % vol" locale="it-IT" [fluid]="true" />
+              </label>
+            </div>
+            <div class="field">
+              <span>Colore</span>
+              <app-choice [options]="wineColorOptions" [(ngModel)]="w.colore" (ngModelChange)="onWineColorChange()" />
+            </div>
+            <div class="field">
+              <span>Tipologia</span>
+              <app-choice [options]="A.TIPOLOGIE" [multiple]="true" [(ngModel)]="w.tipologia" />
+            </div>
+            <div class="row2">
+              <div class="field">
+                <span>Classificazione</span>
+                <p-select [options]="classificazioni" [(ngModel)]="w.classificazione" optionLabel="label"
+                          optionValue="value" [showClear]="true" placeholder="—" [fluid]="true" />
+              </div>
+              <div class="field">
+                <span>Regione</span>
+                <p-autocomplete [(ngModel)]="w.regione" [suggestions]="regioniSuggerite()"
+                                (completeMethod)="searchRegione($event)" [dropdown]="true" [forceSelection]="false"
+                                [minLength]="1" placeholder="es. Piemonte, Alsazia…" [fluid]="true"
+                                (ngModelChange)="changed()" />
+              </div>
+            </div>
+            <label class="field">
+              <span>Vitigni</span>
+              <input pInputText [(ngModel)]="w.vitigni" placeholder="es. Nebbiolo 100%" />
+            </label>
+            <label class="field">
+              <span>Specifiche</span>
+              <input pInputText [(ngModel)]="w.specifiche" placeholder="es. denominazione, menzioni, affinamento" />
+            </label>
+            <label class="field">
+              <span>Note sul vino</span>
+              <textarea pTextarea [(ngModel)]="w.note" rows="2" [autoResize]="true"></textarea>
+            </label>
+          }
+        </div>
+      }
+
+      <!-- ======================= 1 · VISIVO ======================= -->
+      @case (1) {
+        <h1>Esame visivo</h1>
+        <div class="card">
+          <div class="field">
+            <span>Colore</span>
+            <app-choice [options]="visualColors()" swatch="tile" [(ngModel)]="t.visivo.colore" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('colore')" [(ngModel)]="t.punteggi.colore" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Riflessi</span>
+            <app-choice [options]="visualColors()" swatch="tile" [(ngModel)]="t.visivo.riflessi" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Limpidezza</span>
+            <app-choice [options]="A.LIMPIDEZZA" [(ngModel)]="t.visivo.limpidezza" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('limpidezza')" [(ngModel)]="t.punteggi.limpidezza" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Fluidità / Consistenza</span>
+            <app-choice [options]="A.FLUIDITA" [(ngModel)]="t.visivo.fluidita" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('fluidita')" [(ngModel)]="t.punteggi.fluidita" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="switch-row">
+            <div><b>Effervescenza</b><small>Solo per vini spumanti.</small></div>
+            <p-toggleswitch [(ngModel)]="t.visivo.spumante" (onChange)="changed()" />
+          </div>
+          @if (t.visivo.spumante) {
+            <div class="field">
+              <span>Grana delle bollicine</span>
+              <app-choice [options]="A.GRANA_BOLLICINE" [(ngModel)]="t.visivo.effervescenza.grana" />
+            </div>
+            <div class="field">
+              <span>Numero delle bollicine</span>
+              <app-choice [options]="A.NUMERO_BOLLICINE" [(ngModel)]="t.visivo.effervescenza.numero" />
+            </div>
+            <div class="field">
+              <span>Persistenza del perlage</span>
+              <app-choice [options]="A.PERSISTENZA_PERLAGE" [(ngModel)]="t.visivo.effervescenza.persistenza" />
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ======================= 2 · OLFATTIVO ======================= -->
+      @case (2) {
+        <h1>Esame olfattivo</h1>
+        <div class="card">
+          <div class="field">
+            <span>Intensità</span>
+            <app-choice [options]="A.INTENSITA" [(ngModel)]="t.olfattivo.intensita" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('olfIntensita')" [(ngModel)]="t.punteggi.olfIntensita" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Complessità</span>
+            <app-choice [options]="A.COMPLESSITA" [(ngModel)]="t.olfattivo.complessita" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Persistenza</span>
+            <app-choice [options]="A.PERSISTENZA_OLF" [(ngModel)]="t.olfattivo.persistenza" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('olfPersistenza')" [(ngModel)]="t.punteggi.olfPersistenza" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Qualità</span>
+            <app-choice [options]="A.QUALITA" [(ngModel)]="t.olfattivo.qualita" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('olfQualita')" [(ngModel)]="t.punteggi.olfQualita" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Famiglie di profumi</span>
+            <app-choice [options]="A.FAMIGLIE" [multiple]="true" [(ngModel)]="t.olfattivo.famiglie" />
+          </div>
+          <label class="field">
+            <span>Primi profumi</span>
+            <textarea pTextarea [(ngModel)]="t.olfattivo.primiProfumi" rows="2" [autoResize]="true"
+                      placeholder="es. ciliegia, viola, pepe nero"></textarea>
+          </label>
+          <label class="field">
+            <span>Profumi in evoluzione</span>
+            <textarea pTextarea [(ngModel)]="t.olfattivo.profumiEvoluzione" rows="2" [autoResize]="true"></textarea>
+          </label>
+        </div>
+      }
+
+      <!-- ======================= 3 · GUSTATIVO ======================= -->
+      @case (3) {
+        <h1>Esame gustativo</h1>
+        <div class="card">
+          <div class="field">
+            <span>Zuccheri</span>
+            <app-choice [options]="A.ZUCCHERI" [(ngModel)]="t.gustativo.zuccheri" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Alcol</span>
+            <app-choice [options]="A.ALCOL" [(ngModel)]="t.gustativo.alcol" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Polialcoli</span>
+            <app-choice [options]="A.POLIALCOLI" [(ngModel)]="t.gustativo.polialcoli" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Acidità</span>
+            <app-choice [options]="A.ACIDITA" [(ngModel)]="t.gustativo.acidita" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Tannicità</span>
+            <app-choice [options]="A.TANNICITA" [(ngModel)]="t.gustativo.tannicita" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Sali minerali</span>
+            <app-choice [options]="A.SALI_MINERALI" [(ngModel)]="t.gustativo.saliMinerali" />
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Corpo del vino</span>
+            <app-choice [options]="A.CORPO" [(ngModel)]="t.gustativo.corpo" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('corpo')" [(ngModel)]="t.punteggi.corpo" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Equilibrio</span>
+            <app-choice [options]="A.EQUILIBRIO" [(ngModel)]="t.gustativo.equilibrio" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('equilibrio')" [(ngModel)]="t.punteggi.equilibrio" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Intensità</span>
+            <app-choice [options]="A.INTENSITA" [(ngModel)]="t.gustativo.intensita" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('gusIntensita')" [(ngModel)]="t.punteggi.gusIntensita" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>PAI – Persistenza aromatica intensa</span>
+            <app-choice [options]="A.PAI" [(ngModel)]="t.gustativo.pai" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('pai')" [(ngModel)]="t.punteggi.pai" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Qualità</span>
+            <app-choice [options]="A.QUALITA" [(ngModel)]="t.gustativo.qualita" />
+          </div>
+        </div>
+      }
+
+      <!-- ======================= 4 · FINALE ======================= -->
+      @case (4) {
+        <h1>Considerazioni finali</h1>
+        <div class="card">
+          <div class="field">
+            <span>Armonia complessiva</span>
+            <app-choice [options]="A.ARMONIA" [(ngModel)]="t.finale.armonia" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('armonia')" [(ngModel)]="t.punteggi.armonia" /> }
+          </div>
+        </div>
+        <div class="card">
+          <div class="field">
+            <span>Stato evolutivo</span>
+            <app-choice [options]="A.STATO_EVOLUTIVO" [(ngModel)]="t.finale.statoEvolutivo" />
+            @if (t.punteggioAttivo) { <app-score [factor]="factor('statoEvolutivo')" [(ngModel)]="t.punteggi.statoEvolutivo" /> }
+          </div>
+        </div>
+        <div class="card">
+          <label class="field">
+            <span>Note sulla degustazione</span>
+            <textarea pTextarea [(ngModel)]="t.note" rows="3" [autoResize]="true"
+                      placeholder="abbinamenti, impressioni, occasione…"></textarea>
+          </label>
+        </div>
+      }
+
+      <!-- ======================= 5 · RIEPILOGO ======================= -->
+      @case (5) {
+        <h1>Riepilogo</h1>
+        <app-summary [record]="{ wine: w, tasting: t }" />
+
+        <div class="actions">
+          @if (canSave) {
+            <p-button [label]="t.id ? 'Aggiorna in archivio' : 'Salva in archivio'" icon="pi pi-cloud-upload"
+                      [loading]="saving()" (onClick)="save()" [fluid]="true" />
+          } @else {
+            <p-message severity="secondary" styleClass="mb">
+              Per salvare la degustazione inserisci almeno il nome del vino.
+            </p-message>
+            <p-button label="Inserisci i dati del vino" icon="pi pi-tag" severity="secondary"
+                      (onClick)="showWine.set(true); goTo(0)" [fluid]="true" />
+          }
+          <p-button label="Nuova degustazione" icon="pi pi-refresh" [text]="true" (onClick)="restart()" [fluid]="true" />
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Navigazione fissa in basso -->
+  @if (!isLast) {
+    <div class="nav-bar">
+      <p-button icon="pi pi-chevron-left" label="Indietro" severity="secondary" [outlined]="true"
+                [disabled]="step() === 0" (onClick)="prev()" />
+      <p-button [label]="step() === steps.length - 2 ? 'Riepilogo' : 'Avanti'" icon="pi pi-chevron-right"
+                iconPos="right" (onClick)="next()" />
+    </div>
+  }
+}

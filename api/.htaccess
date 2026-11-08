@@ -1,0 +1,4 @@
+# Blocca l'accesso diretto ai file di configurazione
+<FilesMatch "^(config|config\.sample|bootstrap)\.php$|\.sql$">
+  Require all denied
+</FilesMatch>
