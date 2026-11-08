@@ -1,4 +1,5 @@
-:host { display: block; padding-bottom: 4.5rem; }
+/* --nav-bottom: sopra la barra di navigazione, tenendo conto della barra Home degli iPhone */
+:host { display: block; padding-bottom: 4.5rem; --nav-bottom: calc(var(--bottomnav-h, 3.75rem) + env(safe-area-inset-bottom)); }
 
 .center { display: flex; justify-content: center; padding: 3rem 0; }
 
@@ -27,7 +28,7 @@ h1 { font-size: 1.35rem; margin: .25rem 0 .9rem; }
 .step.active .dot { background: var(--p-primary-color); border-color: var(--p-primary-color); color: var(--p-primary-contrast-color); }
 
 .live-total {
-  position: fixed; right: max(1rem, calc((100vw - var(--app-max-w)) / 2 + 1rem)); bottom: calc(var(--bottomnav-h, 3.75rem) + 4.25rem); z-index: 6;
+  position: fixed; right: max(1rem, calc((100vw - var(--app-max-w)) / 2 + 1rem)); bottom: calc(var(--nav-bottom) + 4.25rem); z-index: 6;
   padding: .45rem .8rem; border-radius: 1.25rem; font-weight: 700; font-size: .9rem;
   background: var(--p-primary-color); color: var(--p-primary-contrast-color);
   box-shadow: 0 4px 14px rgba(0, 0, 0, .2);
@@ -58,9 +59,9 @@ h1 { font-size: 1.35rem; margin: .25rem 0 .9rem; }
 .actions { display: flex; flex-direction: column; gap: .6rem; margin-top: 1rem; }
 
 .nav-bar {
-  position: fixed; left: 0; right: 0; bottom: var(--bottomnav-h, 3.75rem); z-index: 6;
+  position: fixed; left: 0; right: 0; bottom: var(--nav-bottom); z-index: 6;
   display: flex; justify-content: space-between; gap: .75rem;
-  padding: .6rem 1rem; background: var(--app-bg);
+  padding: .6rem max(1rem, env(safe-area-inset-right)) .6rem max(1rem, env(safe-area-inset-left)); background: var(--app-bg);
   border-top: 1px solid var(--p-content-border-color);
   max-width: var(--app-max-w); margin: 0 auto;
 }

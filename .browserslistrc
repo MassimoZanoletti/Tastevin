@@ -1,0 +1,8 @@
+# Browser supportati: include iPhone/iPad (iOS) e Safari su Mac non aggiornatissimi
+last 2 Chrome versions
+last 2 Edge versions
+last 2 Firefox versions
+Firefox ESR
+Safari >= 16
+iOS >= 16
+last 2 ChromeAndroid versions

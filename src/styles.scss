@@ -24,3 +24,10 @@ body {
 input, textarea, select, .p-inputtext, .p-select-label { font-size: 16px !important; }
 
 .mb { margin-bottom: .75rem; display: block; }
+
+/* Safari iOS: il campo data altrimenti è più basso degli altri e col testo centrato */
+input[type="date"] {
+  -webkit-appearance: none; appearance: none;
+  min-height: 2.6rem; width: 100%; text-align: left;
+}
+input[type="date"]::-webkit-date-and-time-value { text-align: left; }
