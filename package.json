@@ -1,8 +1,8 @@
 {
   "name": "Tastevin",
-  "version": "1.0.8.2611081",
+  "version": "1.0.10.2611091",
   "author": "Massimo Zanoletti",
-  "compile-date": "2026-11-08",
+  "compile-date": "2026-11-09",
   "scripts": {
     "clean": ".bin\\clean.bat",
     "clean-all": ".bin\\clean-all.bat",
